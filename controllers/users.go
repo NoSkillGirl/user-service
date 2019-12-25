@@ -22,7 +22,7 @@ type ResponseMsgV2 struct {
 	User models.User
 }
 
-type response struct {
+type Response struct {
 	Status   int32
 	Response ResponseMsg
 	Error    ErrorMessage
@@ -53,7 +53,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := models.AddUser(name, phoneNo, emailID)
 	w.Header().Set("Content-Type", "application/json")
-	resp := response{}
+	resp := Response{}
 	if err == true {
 		resp.Status = 500
 		resp.Response = ResponseMsg{}
@@ -98,7 +98,7 @@ func NewBooking(w http.ResponseWriter, r *http.Request) {
 	errOccured := models.AddBooking(userIDInt, busIDInt, noOfSeatsInt, date)
 
 	w.Header().Set("Content-Type", "application/json")
-	resp := response{}
+	resp := Response{}
 	if errOccured == true {
 		resp.Status = 500
 		resp.Response = ResponseMsg{}
