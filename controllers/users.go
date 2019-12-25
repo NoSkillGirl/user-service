@@ -9,29 +9,29 @@ import (
 	"github.com/NoSkillGirl/user-service/models"
 )
 
-type errorMessage struct {
+type ErrorMessage struct {
 	Msg string
 }
 
-type responseMsg struct {
+type ResponseMsg struct {
 	Msg string
 }
 
-type responseMsgV2 struct {
+type ResponseMsgV2 struct {
 	Msg  string
 	User models.User
 }
 
 type response struct {
 	Status   int32
-	Response responseMsg
-	Error    errorMessage
+	Response ResponseMsg
+	Error    ErrorMessage
 }
 
-type responseV2 struct {
+type ResponseV2 struct {
 	Status   int32
-	Response responseMsgV2
-	Error    errorMessage
+	Response ResponseMsgV2
+	Error    ErrorMessage
 }
 
 //ShowAllUser function
@@ -56,17 +56,17 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	if err == true {
 		resp.Status = 500
-		resp.Response = responseMsg{}
-		resp.Error = errorMessage{
+		resp.Response = ResponseMsg{}
+		resp.Error = ErrorMessage{
 			Msg: "Internal Server Error",
 		}
 
 	} else {
 		resp.Status = 200
-		resp.Response = responseMsg{
+		resp.Response = ResponseMsg{
 			Msg: "user succesfully created",
 		}
-		resp.Error = errorMessage{}
+		resp.Error = ErrorMessage{}
 
 	}
 	json.NewEncoder(w).Encode(resp)
@@ -101,17 +101,17 @@ func NewBooking(w http.ResponseWriter, r *http.Request) {
 	resp := response{}
 	if errOccured == true {
 		resp.Status = 500
-		resp.Response = responseMsg{}
-		resp.Error = errorMessage{
+		resp.Response = ResponseMsg{}
+		resp.Error = ErrorMessage{
 			Msg: "Internal Server Error",
 		}
 
 	} else {
 		resp.Status = 200
-		resp.Response = responseMsg{
+		resp.Response = ResponseMsg{
 			Msg: "booking details succesfully added",
 		}
-		resp.Error = errorMessage{}
+		resp.Error = ErrorMessage{}
 
 	}
 	json.NewEncoder(w).Encode(resp)
@@ -125,21 +125,21 @@ func SearchUser(w http.ResponseWriter, r *http.Request) {
 	u, errOccured := models.UserExist(name, password)
 
 	w.Header().Set("Content-Type", "application/json")
-	resp := responseV2{}
+	resp := ResponseV2{}
 	if errOccured == true {
 		resp.Status = 500
-		resp.Response = responseMsgV2{}
-		resp.Error = errorMessage{
+		resp.Response = ResponseMsgV2{}
+		resp.Error = ErrorMessage{
 			Msg: "Internal Server Error",
 		}
 
 	} else {
 		resp.Status = 200
-		resp.Response = responseMsgV2{
+		resp.Response = ResponseMsgV2{
 			Msg:  "user found",
 			User: u,
 		}
-		resp.Error = errorMessage{}
+		resp.Error = ErrorMessage{}
 	}
 	// fmt.Println(u)
 	json.NewEncoder(w).Encode(resp)
