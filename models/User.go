@@ -98,7 +98,7 @@ func AddUser(name, phoneNo, emailID string) (errorOccured bool) {
 
 	// if there is an error opening the connection, handle it
 	if err != nil {
-		panic(err.Error())
+		//panic(err.Error())
 		return true
 	}
 
@@ -115,7 +115,7 @@ func AddUser(name, phoneNo, emailID string) (errorOccured bool) {
 
 	// if there is an error inserting, handle it
 	if err != nil {
-		panic(err.Error())
+		//panic(err.Error())
 		return true
 	}
 
@@ -176,7 +176,7 @@ func AddBooking(userID int, busID int, noOfSeats int, date string) (errorOccured
 
 	// if there is an error opening the connection, handle it
 	if err != nil {
-		panic(err.Error())
+		//panic(err.Error())
 		return true
 	}
 
@@ -193,7 +193,7 @@ func AddBooking(userID int, busID int, noOfSeats int, date string) (errorOccured
 
 	// if there is an error inserting, handle it
 	if err != nil {
-		panic(err.Error())
+		//panic(err.Error())
 		return true
 	}
 
@@ -242,7 +242,6 @@ func UserExist(name, password string) (user []User, errorOccured bool) {
 			return user, true
 		}
 		user = append(user, u)
-
 	}
 
 	return user, false
