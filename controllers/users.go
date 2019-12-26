@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -39,6 +39,12 @@ type ResponseV2 struct {
 	Error    ErrorMessage
 }
 
+//BusSearchRequest struct
+type BusSearchRequest struct {
+	Source      string
+	Destination string
+}
+
 //ShowAllUser function
 func ShowAllUser(w http.ResponseWriter, r *http.Request) {
 	var users []models.User
@@ -55,7 +61,6 @@ func ShowAllUser(w http.ResponseWriter, r *http.Request) {
 // 	phoneNo := r.FormValue("phone_no")
 // 	emailID := r.FormValue("email_id")
 // 	// fmt.Println(name, phoneNo, emailID)
-
 // 	err := models.AddUser(name, phoneNo, emailID)
 // 	w.Header().Set("Content-Type", "application/json")
 // 	resp := Response{}
@@ -65,28 +70,37 @@ func ShowAllUser(w http.ResponseWriter, r *http.Request) {
 // 		resp.Error = ErrorMessage{
 // 			Msg: "Internal Server Error",
 // 		}
-
 // 	} else {
 // 		resp.Status = 200
 // 		resp.Response = ResponseMsg{
 // 			Msg: "user succesfully created",
 // 		}
 // 		resp.Error = ErrorMessage{}
-
 // 	}
 // 	json.NewEncoder(w).Encode(resp)
 // }
 
 //SearchBus function
 func SearchBus(w http.ResponseWriter, r *http.Request) {
-	source := r.FormValue("source")
-	destination := r.FormValue("destination")
-	fmt.Println(source, destination)
 
-	busDetails := models.SearchBus(source, destination)
+	// source := r.FormValue("source")
+	// destination := r.FormValue("destination")
+	// fmt.Println(source, destination)
+	// busDetails := models.SearchBus(source, destination)
+	// w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(busDetails)
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(busDetails)
+	var reqJSON BusSearchRequest
+	err := json.NewDecoder(r.Body).Decode(&reqJSON)
+
+	if err != nil {
+		panic(err)
+	}
+	log.Println(reqJSON)
+
+	b := models.SearchBus(reqJSON.Source, reqJSON.Destination)
+	json.NewEncoder(w).Encode(b)
+
 }
 
 //NewBooking function
