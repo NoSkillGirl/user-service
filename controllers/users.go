@@ -50,32 +50,32 @@ func ShowAllUser(w http.ResponseWriter, r *http.Request) {
 }
 
 //RegisterUser function
-func RegisterUser(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
-	phoneNo := r.FormValue("phone_no")
-	emailID := r.FormValue("email_id")
-	// fmt.Println(name, phoneNo, emailID)
+// func RegisterUser(w http.ResponseWriter, r *http.Request) {
+// 	name := r.FormValue("name")
+// 	phoneNo := r.FormValue("phone_no")
+// 	emailID := r.FormValue("email_id")
+// 	// fmt.Println(name, phoneNo, emailID)
 
-	err := models.AddUser(name, phoneNo, emailID)
-	w.Header().Set("Content-Type", "application/json")
-	resp := Response{}
-	if err == true {
-		resp.Status = 500
-		resp.Response = ResponseMsg{}
-		resp.Error = ErrorMessage{
-			Msg: "Internal Server Error",
-		}
+// 	err := models.AddUser(name, phoneNo, emailID)
+// 	w.Header().Set("Content-Type", "application/json")
+// 	resp := Response{}
+// 	if err == true {
+// 		resp.Status = 500
+// 		resp.Response = ResponseMsg{}
+// 		resp.Error = ErrorMessage{
+// 			Msg: "Internal Server Error",
+// 		}
 
-	} else {
-		resp.Status = 200
-		resp.Response = ResponseMsg{
-			Msg: "user succesfully created",
-		}
-		resp.Error = ErrorMessage{}
+// 	} else {
+// 		resp.Status = 200
+// 		resp.Response = ResponseMsg{
+// 			Msg: "user succesfully created",
+// 		}
+// 		resp.Error = ErrorMessage{}
 
-	}
-	json.NewEncoder(w).Encode(resp)
-}
+// 	}
+// 	json.NewEncoder(w).Encode(resp)
+// }
 
 //SearchBus function
 func SearchBus(w http.ResponseWriter, r *http.Request) {

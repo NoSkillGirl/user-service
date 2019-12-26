@@ -93,7 +93,7 @@ func GetAllUsers() (users []User) {
 }
 
 //AddUser function
-func AddUser(name, phoneNo, emailID string) (errorOccured bool) {
+func AddUser(name, phoneNo, emailID, password string) (errorOccured bool) {
 	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
 
 	// if there is an error opening the connection, handle it
@@ -105,9 +105,9 @@ func AddUser(name, phoneNo, emailID string) (errorOccured bool) {
 	// defer the close till after the main function has finished executing
 	defer db.Close()
 
-	addUserQuery := `INSERT INTO user_details (name, phone_no, email_no) VALUES ('%s', '%s', '%s')`
+	addUserQuery := `INSERT INTO user_details (name, phone_no, email_no, password) VALUES ('%s', '%s', '%s', '%s')`
 
-	addUserQueryString := fmt.Sprintf(addUserQuery, name, phoneNo, emailID)
+	addUserQueryString := fmt.Sprintf(addUserQuery, name, phoneNo, emailID, password)
 	fmt.Println(addUserQueryString)
 
 	// perform a db.Query insert
