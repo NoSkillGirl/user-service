@@ -203,19 +203,19 @@ func AddBooking(userID int, busID int, noOfSeats int, date string) (errorOccured
 }
 
 //UserExist function
-func UserExist(name, password string) (user User, errorOccured bool) {
+func UserExist(name, password string) (user []User, errorOccured bool) {
 	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
 
 	// if there is an error opening the connection, handle it
 	if err != nil {
 		// panic(err.Error())
-		return User{}, true
+		return user, true
 	}
 
 	// defer the close till after the main function has finished executing
 	defer db.Close()
 
-	searchUserQuery := `select * from user_details where name = '%s' and password = '%s'`
+	searchUserQuery := `select * from user_details where name = '%s' and password = '%s' limit 1;`
 
 	searchUserQueryString := fmt.Sprintf(searchUserQuery, name, password)
 	fmt.Println(searchUserQueryString)
@@ -226,18 +226,24 @@ func UserExist(name, password string) (user User, errorOccured bool) {
 	// if there is an error inserting, handle it
 	if err != nil {
 		// panic(err.Error())
-		return User{}, true
+		return user, true
 	}
 
 	// be careful deferring Queries if you are using transactions
 	defer search.Close()
 
-	u := User{}
-	err = search.Scan(&u.ID, &u.Name, &u.PhoneNo, &u.EmailID, &u.Password)
-	if err != nil {
-		// handle this error
-		panic(err)
+	for search.Next() {
+		u := User{}
+		err = search.Scan(&u.ID, &u.Name, &u.PhoneNo, &u.EmailID, &u.Password)
+
+		if err != nil {
+			// handle this error
+			//panic(err)
+			return user, true
+		}
+		user = append(user, u)
+
 	}
 
-	return u, false
+	return user, false
 }

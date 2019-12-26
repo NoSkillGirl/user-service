@@ -12,5 +12,5 @@ func UserRoutes() {
 	http.HandleFunc("/users", controllers.ShowAllUser)
 	http.HandleFunc("/search", controllers.SearchBus)
 	http.HandleFunc("/booking/new", controllers.NewBooking)
-	http.HandleFunc("/searchUser", controllers.SearchUser)
+	//http.HandleFunc("/searchUser", controllers.SearchUser)
 }

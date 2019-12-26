@@ -9,25 +9,30 @@ import (
 	"github.com/NoSkillGirl/user-service/models"
 )
 
+//ErrorMessage struct
 type ErrorMessage struct {
 	Msg string
 }
 
+//ResponseMsg struct
 type ResponseMsg struct {
 	Msg string
 }
 
+//ResponseMsgV2 struct
 type ResponseMsgV2 struct {
 	Msg  string
-	User models.User
+	User []models.User
 }
 
+//Response struct
 type Response struct {
 	Status   int32
 	Response ResponseMsg
 	Error    ErrorMessage
 }
 
+//ResponseV2 struct
 type ResponseV2 struct {
 	Status   int32
 	Response ResponseMsgV2
@@ -118,29 +123,29 @@ func NewBooking(w http.ResponseWriter, r *http.Request) {
 }
 
 //SearchUser function
-func SearchUser(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
-	password := r.FormValue("password")
+// func SearchUser(w http.ResponseWriter, r *http.Request) {
+// 	name := r.FormValue("name")
+// 	password := r.FormValue("password")
 
-	u, errOccured := models.UserExist(name, password)
+// 	u, errOccured := models.UserExist(name, password)
 
-	w.Header().Set("Content-Type", "application/json")
-	resp := ResponseV2{}
-	if errOccured == true {
-		resp.Status = 500
-		resp.Response = ResponseMsgV2{}
-		resp.Error = ErrorMessage{
-			Msg: "Internal Server Error",
-		}
+// 	w.Header().Set("Content-Type", "application/json")
+// 	resp := ResponseV2{}
+// 	if errOccured == true {
+// 		resp.Status = 500
+// 		resp.Response = ResponseMsgV2{}
+// 		resp.Error = ErrorMessage{
+// 			Msg: "Internal Server Error",
+// 		}
 
-	} else {
-		resp.Status = 200
-		resp.Response = ResponseMsgV2{
-			Msg:  "user found",
-			User: u,
-		}
-		resp.Error = ErrorMessage{}
-	}
-	// fmt.Println(u)
-	json.NewEncoder(w).Encode(resp)
-}
+// 	} else {
+// 		resp.Status = 200
+// 		resp.Response = ResponseMsgV2{
+// 			Msg:  "user found",
+// 			User: u,
+// 		}
+// 		resp.Error = ErrorMessage{}
+// 	}
+// 	// fmt.Println(u)
+// 	json.NewEncoder(w).Encode(resp)
+// }
