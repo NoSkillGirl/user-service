@@ -105,7 +105,7 @@ func AddUser(name, phoneNo, emailID, password string) (errorOccured bool) {
 	// defer the close till after the main function has finished executing
 	defer db.Close()
 
-	addUserQuery := `INSERT INTO user_details (name, phone_no, email_no, password) VALUES ('%s', '%s', '%s', '%s')`
+	addUserQuery := `INSERT INTO user_details (name, phone_no, email_id, password) VALUES ('%s', '%s', '%s', '%s')`
 
 	addUserQueryString := fmt.Sprintf(addUserQuery, name, phoneNo, emailID, password)
 	fmt.Println(addUserQueryString)
