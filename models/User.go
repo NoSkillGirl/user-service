@@ -105,6 +105,11 @@ func AddUser(name, phoneNo, emailID, password string) (errorOccured bool) {
 	// defer the close till after the main function has finished executing
 	defer db.Close()
 
+	duplicateCheckQuery := `select count(*) from user_details where name = '%s' and (phone_no = '%s' or email_id = '%s')`
+	duplicateCheckQueryString := fmt.Sprintf(duplicateCheckQuery, name, phoneNo, emailID)
+	check, err := db.Query(duplicateCheckQueryString)
+	fmt.Println(check, err)
+
 	addUserQuery := `INSERT INTO user_details (name, phone_no, email_id, password) VALUES ('%s', '%s', '%s', '%s')`
 
 	addUserQueryString := fmt.Sprintf(addUserQuery, name, phoneNo, emailID, password)
