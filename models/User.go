@@ -101,13 +101,13 @@ func GetAllUsers() (users []User) {
 //AddUser function
 func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplicateUser bool) {
 	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
-
+	fmt.Println("U1..........................")
 	// if there is an error opening the connection, handle it
 	if err != nil {
 		//panic(err.Error())
 		return true, false
 	}
-
+	fmt.Println("U2..........................")
 	// defer the close till after the main function has finished executing
 	defer db.Close()
 
@@ -117,11 +117,12 @@ func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplic
 	//duplicateCheckQueryString := fmt.Sprintf(duplicateCheckQuery, name, phoneNo, emailID)
 	//check, err := db.Query(duplicateCheckQueryString)
 	//fmt.Println("check : ", check)
-
+	fmt.Println("U3..........................")
 	if error != nil {
 		return true, false
 	}
 	if count == 0 {
+		fmt.Println("U4..........................")
 		addUserQuery := `INSER INTO user_details (name, phone_no, email_id, password) VALUES ('%s', '%s', '%s', '%s')`
 
 		addUserQueryString := fmt.Sprintf(addUserQuery, name, phoneNo, emailID, password)
@@ -140,6 +141,7 @@ func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplic
 		defer insert.Close()
 		return false, false
 	}
+	fmt.Println("U5..........................")
 	//error = false, duplicate = true
 	return false, true
 
