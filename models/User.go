@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -45,6 +46,11 @@ type BookingDetail struct {
 	NoOfSeats int32
 	Date      string
 }
+
+var (
+	ctx context.Context
+	db  *sql.DB
+)
 
 //GetAllUsers function
 func GetAllUsers() (users []User) {
@@ -93,40 +99,50 @@ func GetAllUsers() (users []User) {
 }
 
 //AddUser function
-func AddUser(name, phoneNo, emailID, password string) (errorOccured bool) {
+func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplicateUser bool) {
 	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
 
 	// if there is an error opening the connection, handle it
 	if err != nil {
 		//panic(err.Error())
-		return true
+		return true, false
 	}
 
 	// defer the close till after the main function has finished executing
 	defer db.Close()
 
-	duplicateCheckQuery := `select count(*) from user_details where name = '%s' and (phone_no = '%s' or email_id = '%s')`
-	duplicateCheckQueryString := fmt.Sprintf(duplicateCheckQuery, name, phoneNo, emailID)
-	check, err := db.Query(duplicateCheckQueryString)
-	fmt.Println("check : ", check)
+	var count int
+	error := db.QueryRowContext(ctx, "select count(*) from user_details where name=? and (phone_no=? or email_id=?)", name, phoneNo, emailID).Scan(&count)
+	//duplicateCheckQuery := `select count(*) from user_details where name = '%s' and (phone_no = '%s' or email_id = '%s')`
+	//duplicateCheckQueryString := fmt.Sprintf(duplicateCheckQuery, name, phoneNo, emailID)
+	//check, err := db.Query(duplicateCheckQueryString)
+	//fmt.Println("check : ", check)
 
-	addUserQuery := `INSER INTO user_details (name, phone_no, email_id, password) VALUES ('%s', '%s', '%s', '%s')`
-
-	addUserQueryString := fmt.Sprintf(addUserQuery, name, phoneNo, emailID, password)
-	fmt.Println(addUserQueryString)
-
-	// perform a db.Query insert
-	insert, err := db.Query(addUserQueryString)
-
-	// if there is an error inserting, handle it
-	if err != nil {
-		//panic(err.Error())
-		return true
+	if error != nil {
+		return true, false
 	}
+	if count == 0 {
+		addUserQuery := `INSER INTO user_details (name, phone_no, email_id, password) VALUES ('%s', '%s', '%s', '%s')`
 
-	// be careful deferring Queries if you are using transactions
-	defer insert.Close()
-	return false
+		addUserQueryString := fmt.Sprintf(addUserQuery, name, phoneNo, emailID, password)
+		fmt.Println(addUserQueryString)
+
+		// perform a db.Query insert
+		insert, err := db.Query(addUserQueryString)
+
+		// if there is an error inserting, handle it
+		if err != nil {
+			//panic(err.Error())
+			return true, false
+		}
+
+		// be careful deferring Queries if you are using transactions
+		defer insert.Close()
+		return false, false
+	}
+	//error = false, duplicate = true
+	return false, true
+
 }
 
 //SearchBus function
