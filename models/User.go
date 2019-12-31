@@ -28,14 +28,17 @@ type Company struct {
 
 // BusDetail Struct
 type BusDetail struct {
-	ID          int32
-	Number      string
-	AC          bool
-	Sleeper     bool
-	TotalSeat   int32
-	Source      string
-	Destination string
-	CompanyID   int32
+	ID             int32
+	Number         string
+	AC             bool
+	Sleeper        bool
+	TotalSeat      int32
+	Source         string
+	Destination    string
+	CompanyID      int32
+	DepartureTime  string
+	ArrivalTime    string
+	SeatsAvailable int32
 }
 
 // BookingDetail Struct
@@ -114,10 +117,6 @@ func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplic
 
 	var count int
 	error := db.QueryRowContext(ctx, "select count(*) from user_details where name=? and (phone_no=? or email_id=?)", name, phoneNo, emailID).Scan(&count)
-	//duplicateCheckQuery := `select count(*) from user_details where name = '%s' and (phone_no = '%s' or email_id = '%s')`
-	//duplicateCheckQueryString := fmt.Sprintf(duplicateCheckQuery, name, phoneNo, emailID)
-	//check, err := db.Query(duplicateCheckQueryString)
-	//fmt.Println("check : ", check)
 
 	if error != nil {
 		return true, false
@@ -147,80 +146,103 @@ func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplic
 }
 
 //SearchBus function
-func SearchBus(source, destination string) (busDetails []BusDetail) {
+func SearchBus(source, destination string, travelDate string) (busDetails []BusDetail, errorOccured bool) {
+	// opening mysql connection
 	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
-
-	// if there is an error opening the connection, handle it
 	if err != nil {
-		panic(err.Error())
+		return []BusDetail{}, true
 	}
-
-	// defer the close till after the main function has finished executing
 	defer db.Close()
 
-	selectBusDetailQuery := `select * from bus_details where source = '%s' and destination = '%s'`
-
+	// bus_details query preparation
+	selectBusDetailQuery := `select * from bus_details where source = '%s' and destination = '%s';`
 	selectBusDetailQueryString := fmt.Sprintf(selectBusDetailQuery, source, destination)
-	fmt.Println(selectBusDetailQueryString)
-
-	// perform a db.Query select
+	// bus_details running in db
 	rows, err := db.Query(selectBusDetailQueryString)
-
-	// if there is an error, handle it
 	if err != nil {
-		panic(err.Error())
+		return []BusDetail{}, true
 	}
-
 	defer rows.Close()
 
+	// seats_available query preparation
+	seatsAvailableQuery := `select bus_id, sum(no_of_seats) from booking_details where bus_id in (select id from bus_details where source = '%s' and destination = '%s') and date_of_travel = '%s' group by bus_id;`
+	seatsAvailableQueryString := fmt.Sprintf(seatsAvailableQuery, source, destination, travelDate)
+	fmt.Println(seatsAvailableQueryString)
+
+	// seats_available running in db
+	rs, err := db.Query(seatsAvailableQueryString)
+	if err != nil {
+		return []BusDetail{}, true
+	}
+	defer rs.Close()
+	busSeatAvailability := make(map[int32]int32)
+
+	// extracting the results
+	for rs.Next() {
+		var busID, seatsAvailable int32
+		err = rs.Scan(&busID, &seatsAvailable)
+		if err != nil {
+			return []BusDetail{}, true
+		}
+		busSeatAvailability[busID] = seatsAvailable
+	}
+
+	err = rs.Err()
+	if err != nil {
+		return []BusDetail{}, true
+	}
+
+	// extracting the results
 	for rows.Next() {
 		b := BusDetail{}
-		err = rows.Scan(&b.ID, &b.Number, &b.AC, &b.Sleeper, &b.TotalSeat, &b.Source, &b.Destination, &b.CompanyID)
-
+		err = rows.Scan(&b.ID, &b.Number, &b.AC, &b.Sleeper, &b.TotalSeat, &b.Source, &b.Destination, &b.CompanyID, &b.DepartureTime, &b.ArrivalTime)
 		if err != nil {
-			// handle this error
-			panic(err)
+			return []BusDetail{}, true
 		}
-		busDetails = append(busDetails, b)
+		if busSeatAvailability[b.ID] != 0 {
+			b.SeatsAvailable = b.TotalSeat - busSeatAvailability[b.ID]
+		} else {
+			b.SeatsAvailable = b.TotalSeat
+		}
 
+		busDetails = append(busDetails, b)
 	}
-	// get any error encountered during iteration
+
 	err = rows.Err()
 	if err != nil {
-		panic(err)
+		return []BusDetail{}, true
 	}
-	return busDetails
+
+	return busDetails, false
 }
 
 //AddBooking function
-func AddBooking(userID int, busID int, noOfSeats int, date string) (errorOccured bool) {
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+func AddBooking(userID int, busID int, noOfSeats int, travelDate string) (errorOccured bool) {
 
-	// if there is an error opening the connection, handle it
+	// initilize db connection
+	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
 	if err != nil {
-		//panic(err.Error())
+		fmt.Println("Error in initializing db connection", err)
 		return true
 	}
-
-	// defer the close till after the main function has finished executing
 	defer db.Close()
 
-	addBookingQuery := `INSERT INTO booking_details (user_id, bus_id, no_of_seats, date) VALUES (%d, %d, %d, '%s')`
-
-	addBookingQueryString := fmt.Sprintf(addBookingQuery, userID, busID, noOfSeats, date)
+	// t := time.Now().Format("2006-01-02")
+	addBookingQuery := `
+	INSERT INTO booking_details (user_id, bus_id, no_of_seats, date_of_travel, date_of_booking) 
+	VALUES (%d, %d, %d, '%s', now())
+	`
+	addBookingQueryString := fmt.Sprintf(addBookingQuery, userID, busID, noOfSeats, travelDate)
 	fmt.Println(addBookingQueryString)
 
 	// perform a db.Query insert
 	insert, err := db.Query(addBookingQueryString)
-
-	// if there is an error inserting, handle it
 	if err != nil {
-		//panic(err.Error())
+		fmt.Println(err)
 		return true
 	}
-
-	// be careful deferring Queries if you are using transactions
 	defer insert.Close()
+
 	return false
 }
 

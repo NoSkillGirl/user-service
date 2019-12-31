@@ -1,10 +1,11 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
-	"log"
+	"fmt"
+	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/NoSkillGirl/user-service/models"
 )
@@ -19,17 +20,17 @@ type ResponseMsg struct {
 	Msg string
 }
 
-//ResponseMsgV2 struct
-type ResponseMsgV2 struct {
-	Msg  string
-	User []models.User
-}
-
 //Response struct
 type Response struct {
 	Status   int32
 	Response ResponseMsg
 	Error    ErrorMessage
+}
+
+//ResponseMsgV2 struct
+type ResponseMsgV2 struct {
+	Msg  string
+	User []models.User
 }
 
 //ResponseV2 struct
@@ -39,10 +40,32 @@ type ResponseV2 struct {
 	Error    ErrorMessage
 }
 
+//ResponseMsgV3 struct
+type ResponseMsgV3 struct {
+	Msg string
+	Bus []models.BusDetail
+}
+
+//ResponseV3 struct
+type ResponseV3 struct {
+	Status   int32
+	Response ResponseMsgV3
+	Error    ErrorMessage
+}
+
 //BusSearchRequest struct
 type BusSearchRequest struct {
-	Source      string
-	Destination string
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+	TravelDate  string `json:"travelDate"`
+}
+
+//BookingRequest struct
+type BookingRequest struct {
+	UserID       int
+	BusID        int
+	NoOfSeats    int
+	DateOfTravel string
 }
 
 //ShowAllUser function
@@ -55,76 +78,68 @@ func ShowAllUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-//RegisterUser function
-// func RegisterUser(w http.ResponseWriter, r *http.Request) {
-// 	name := r.FormValue("name")
-// 	phoneNo := r.FormValue("phone_no")
-// 	emailID := r.FormValue("email_id")
-// 	// fmt.Println(name, phoneNo, emailID)
-// 	err := models.AddUser(name, phoneNo, emailID)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	resp := Response{}
-// 	if err == true {
-// 		resp.Status = 500
-// 		resp.Response = ResponseMsg{}
-// 		resp.Error = ErrorMessage{
-// 			Msg: "Internal Server Error",
-// 		}
-// 	} else {
-// 		resp.Status = 200
-// 		resp.Response = ResponseMsg{
-// 			Msg: "user succesfully created",
-// 		}
-// 		resp.Error = ErrorMessage{}
-// 	}
-// 	json.NewEncoder(w).Encode(resp)
-// }
-
 //SearchBus function
 func SearchBus(w http.ResponseWriter, r *http.Request) {
-
-	// source := r.FormValue("source")
-	// destination := r.FormValue("destination")
-	// fmt.Println(source, destination)
-	// busDetails := models.SearchBus(source, destination)
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(busDetails)
-
 	var reqJSON BusSearchRequest
 	err := json.NewDecoder(r.Body).Decode(&reqJSON)
-
 	if err != nil {
 		panic(err)
 	}
-	log.Println(reqJSON)
 
-	b := models.SearchBus(reqJSON.Source, reqJSON.Destination)
-	json.NewEncoder(w).Encode(b)
+	b, errOccured := models.SearchBus(reqJSON.Source, reqJSON.Destination, reqJSON.TravelDate)
 
+	if errOccured == false {
+		data := ResponseV3{
+			Status: 200,
+			Response: ResponseMsgV3{
+				Bus: b,
+			},
+			Error: ErrorMessage{},
+		}
+		if len(b) > 0 {
+			data.Response.Msg = "Buses avaliable are: "
+		} else {
+			data.Response.Msg = "Bus not avaliable"
+		}
+		json.NewEncoder(w).Encode(data)
+	} else if errOccured == true {
+		data := Response{
+			Status: 500,
+			Response: ResponseMsg{
+				Msg: "Internal server error",
+			},
+			Error: ErrorMessage{},
+		}
+		json.NewEncoder(w).Encode(data)
+	}
 }
 
 //NewBooking function
 func NewBooking(w http.ResponseWriter, r *http.Request) {
-	userID := r.FormValue("user_id")
-	userIDInt, _ := strconv.Atoi(userID)
 
-	busID := r.FormValue("bus_id")
-	busIDInt, _ := strconv.Atoi(busID)
-	noOfSeats := r.FormValue("no_of_seats")
-	noOfSeatsInt, _ := strconv.Atoi(noOfSeats)
-	date := r.FormValue("date")
+	// Req Obj
+	var reqJSON BookingRequest
 
-	errOccured := models.AddBooking(userIDInt, busIDInt, noOfSeatsInt, date)
-
-	w.Header().Set("Content-Type", "application/json")
+	// Res Obj
 	resp := Response{}
+	w.Header().Set("Content-Type", "application/json")
+
+	// Req Decode
+	err := json.NewDecoder(r.Body).Decode(&reqJSON)
+	if err != nil {
+		fmt.Println(err)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+
+	// Add Booking
+	errOccured := models.AddBooking(reqJSON.UserID, reqJSON.BusID, reqJSON.NoOfSeats, reqJSON.DateOfTravel)
 	if errOccured == true {
 		resp.Status = 500
 		resp.Response = ResponseMsg{}
 		resp.Error = ErrorMessage{
 			Msg: "Internal Server Error",
 		}
-
 	} else {
 		resp.Status = 200
 		resp.Response = ResponseMsg{
@@ -132,34 +147,33 @@ func NewBooking(w http.ResponseWriter, r *http.Request) {
 		}
 		resp.Error = ErrorMessage{}
 
+		// Should send SMS to the customer with booking details.
+		type SMSRequest struct {
+			Mobile  string
+			Message string
+		}
+
+		smsRequest := SMSRequest{
+			Mobile:  "+918904621381",
+			Message: "Your Bus booking was successful",
+		}
+
+		smsRequestInBytes, err := json.Marshal(smsRequest)
+
+		req, err := http.NewRequest("POST", "http://localhost:8081/SendSMS", bytes.NewBuffer(smsRequestInBytes))
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error in reading response body from smsService", err)
+		}
+
+		fmt.Println(string(body))
 	}
 	json.NewEncoder(w).Encode(resp)
 }
-
-//SearchUser function
-// func SearchUser(w http.ResponseWriter, r *http.Request) {
-// 	name := r.FormValue("name")
-// 	password := r.FormValue("password")
-
-// 	u, errOccured := models.UserExist(name, password)
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	resp := ResponseV2{}
-// 	if errOccured == true {
-// 		resp.Status = 500
-// 		resp.Response = ResponseMsgV2{}
-// 		resp.Error = ErrorMessage{
-// 			Msg: "Internal Server Error",
-// 		}
-
-// 	} else {
-// 		resp.Status = 200
-// 		resp.Response = ResponseMsgV2{
-// 			Msg:  "user found",
-// 			User: u,
-// 		}
-// 		resp.Error = ErrorMessage{}
-// 	}
-// 	// fmt.Println(u)
-// 	json.NewEncoder(w).Encode(resp)
-// }
