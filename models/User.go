@@ -55,10 +55,14 @@ var (
 	db  *sql.DB
 )
 
+const mySQLHost = "34.93.137.151"
+
+var mySQLConnection = fmt.Sprintf("root:password@tcp(%s)/tour_travel", mySQLHost)
+
 //GetAllUsers function
 func GetAllUsers() (users []User) {
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
-
+	//db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	db, err := sql.Open("mysql", mySQLConnection)
 	// if there is an error opening the connection, handle it
 	if err != nil {
 		panic(err.Error())
@@ -104,7 +108,8 @@ func GetAllUsers() (users []User) {
 //AddUser function
 func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplicateUser bool) {
 	ctx := context.Background()
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	//db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	db, err := sql.Open("mysql", mySQLConnection)
 
 	// if there is an error opening the connection, handle it
 	if err != nil {
@@ -148,7 +153,9 @@ func AddUser(name, phoneNo, emailID, password string) (errorOccured bool, duplic
 //SearchBus function
 func SearchBus(source, destination string, travelDate string) (busDetails []BusDetail, errorOccured bool) {
 	// opening mysql connection
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	//db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	db, err := sql.Open("mysql", mySQLConnection)
+
 	if err != nil {
 		return []BusDetail{}, true
 	}
@@ -220,7 +227,9 @@ func SearchBus(source, destination string, travelDate string) (busDetails []BusD
 func AddBooking(userID int, busID int, noOfSeats int, travelDate string) (errorOccured bool) {
 
 	// initilize db connection
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	//db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	db, err := sql.Open("mysql", mySQLConnection)
+
 	if err != nil {
 		fmt.Println("Error in initializing db connection", err)
 		return true
@@ -248,8 +257,8 @@ func AddBooking(userID int, busID int, noOfSeats int, travelDate string) (errorO
 
 //UserExist function
 func UserExist(name, password string) (user []User, errorOccured bool) {
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
-
+	//db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/tour_travel")
+	db, err := sql.Open("mysql", mySQLConnection)
 	// if there is an error opening the connection, handle it
 	if err != nil {
 		// panic(err.Error())

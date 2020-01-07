@@ -13,10 +13,10 @@ spec:
     metadata:
       labels:
         app: user-service
-        version: v1
+        version: v3
     spec:
       containers:
-        - image: ajoop/user-service:v1
+        - image: ajoop/user-service:v3
           imagePullPolicy: Always
           name: user-service
           ports:
