@@ -1,0 +1,23 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  progressDeadlineSeconds: 100
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+        version: v1
+    spec:
+      containers:
+        - image: ajoop/user-service:v1
+          imagePullPolicy: Always
+          name: user-service
+          ports:
+            - containerPort: 8082
