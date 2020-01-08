@@ -6,10 +6,24 @@ metadata:
   labels:
     app: user-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 8082
       protocol: TCP
       targetPort: 8082
   selector:
     app: user-service
+
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: user-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: user-service
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75
