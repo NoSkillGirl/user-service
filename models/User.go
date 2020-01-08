@@ -71,7 +71,7 @@ func GetAllUsers() (users []User) {
 	// defer the close till after the main function has finished executing
 	defer db.Close()
 
-	selectAllUsersQuery := `SELECT id, name, phone_no, email_no FROM user_details`
+	selectAllUsersQuery := `SELECT id, name, phone_no, email_id, password FROM user_details`
 
 	// perform a db.Query select
 	rows, err := db.Query(selectAllUsersQuery)
@@ -87,7 +87,7 @@ func GetAllUsers() (users []User) {
 
 		u := User{}
 
-		err = rows.Scan(&u.ID, &u.Name, &u.PhoneNo, &u.EmailID)
+		err = rows.Scan(&u.ID, &u.Name, &u.PhoneNo, &u.EmailID, &u.Password)
 
 		if err != nil {
 			// handle this error
